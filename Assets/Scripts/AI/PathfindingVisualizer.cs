@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DungeonCrawler.Pathfinding;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 namespace DungeonCrawler.AI
 {
@@ -28,6 +29,10 @@ namespace DungeonCrawler.AI
         private Tilemap floorTilemap;
         private Tilemap wallTilemap;
         private Coroutine autoPlayCoroutine;
+        private GameObject statsRoot;
+        private Text astarStatsText;
+        private Text bfsStatsText;
+        private Font statsFont;
 
         private readonly Color astarVisitedColor = new Color(0.45f, 1f, 0.45f, 0.4f);
         private readonly Color astarFrontierColor = new Color(0.8f, 1f, 0.55f, 0.35f);
@@ -69,13 +74,17 @@ namespace DungeonCrawler.AI
 
         public void ShowAStarSearch()
         {
-            StartVisualization(VisualizationMode.AStar, "Enemy_AStar_Test", true);
+            StartVisualization(VisualizationMode.AStar, "Enemy_AStar_Test", true, true);
+            ShowStatsPanel(true, false);
+            Debug.Log("Visualization stats shown: A*");
             Debug.Log("A* visualization started");
         }
 
         public void ShowBFSSearch()
         {
-            StartVisualization(VisualizationMode.BFS, "Enemy_BFS_Test", true);
+            StartVisualization(VisualizationMode.BFS, "Enemy_BFS_Test", true, true);
+            ShowStatsPanel(false, true);
+            Debug.Log("Visualization stats shown: BFS");
             Debug.Log("BFS visualization started");
         }
 
@@ -87,15 +96,17 @@ namespace DungeonCrawler.AI
             }
 
             StopAutoPlay();
-            List<PathfindingStepData> astarSteps = BuildSteps(VisualizationMode.AStar, "Enemy_AStar_Test");
-            List<PathfindingStepData> bfsSteps = BuildSteps(VisualizationMode.BFS, "Enemy_BFS_Test");
+            VisualizationRunData astarRun = BuildRunData(VisualizationMode.AStar, "Enemy_AStar_Test");
+            VisualizationRunData bfsRun = BuildRunData(VisualizationMode.BFS, "Enemy_BFS_Test");
 
-            if (astarSteps.Count == 0 && bfsSteps.Count == 0)
+            if (astarRun.steps.Count == 0 && bfsRun.steps.Count == 0)
             {
                 return;
             }
 
-            autoPlayCoroutine = StartCoroutine(PlayCompareSteps(astarSteps, bfsSteps));
+            ShowStatsPanel(true, true);
+            Debug.Log("Visualization stats shown: Compare");
+            autoPlayCoroutine = StartCoroutine(PlayCompareSteps(astarRun, bfsRun));
             Debug.Log("Compare visualization started");
         }
 
@@ -125,7 +136,17 @@ namespace DungeonCrawler.AI
             Debug.Log("Visualization cleared");
         }
 
-        private void StartVisualization(VisualizationMode mode, string enemyName, bool clearFirst)
+        public void HideStatsPanel()
+        {
+            if (statsRoot != null)
+            {
+                statsRoot.SetActive(false);
+            }
+
+            Debug.Log("Visualization stats hidden");
+        }
+
+        private void StartVisualization(VisualizationMode mode, string enemyName, bool clearFirst, bool showSingleStats)
         {
             if (clearFirst && clearBeforeStart)
             {
@@ -136,74 +157,91 @@ namespace DungeonCrawler.AI
                 StopAutoPlay();
             }
 
-            List<PathfindingStepData> steps = BuildSteps(mode, enemyName);
-            if (steps.Count == 0)
+            VisualizationRunData runData = BuildRunData(mode, enemyName);
+            if (runData.steps.Count == 0)
             {
                 return;
             }
 
-            autoPlayCoroutine = StartCoroutine(PlaySteps(steps, mode, Vector3.zero));
+            if (showSingleStats)
+            {
+                UpdateStatsText(mode, null, runData, 0, runData.steps.Count);
+            }
+
+            autoPlayCoroutine = StartCoroutine(PlaySteps(runData, mode, Vector3.zero));
         }
 
-        private List<PathfindingStepData> BuildSteps(VisualizationMode mode, string enemyName)
+        private VisualizationRunData BuildRunData(VisualizationMode mode, string enemyName)
         {
+            VisualizationRunData runData = new VisualizationRunData();
             GameObject enemyObject = GameObject.Find(enemyName);
             if (enemyObject == null)
             {
                 Debug.LogWarning($"{enemyName} not found. Cannot start pathfinding visualization.");
-                return new List<PathfindingStepData>();
+                return runData;
             }
 
             GameObject playerObject = GameObject.Find("Player");
             if (playerObject == null)
             {
                 Debug.LogWarning("Player not found. Cannot start pathfinding visualization.");
-                return new List<PathfindingStepData>();
+                return runData;
             }
 
             PathfindingGrid grid = PathfindingGrid.Instance;
             if (grid == null)
             {
                 Debug.LogWarning("PathfindingGrid not found. Cannot start pathfinding visualization.");
-                return new List<PathfindingStepData>();
+                return runData;
             }
 
             if (mode == VisualizationMode.BFS)
             {
-                return BreadthFirstSearchPathfinder.GenerateSearchSteps(grid, enemyObject.transform.position, playerObject.transform.position);
+                PathfindingStats stats = PathfindingBenchmarkUI.BFSStats;
+                BreadthFirstSearchPathfinder.FindPath(grid, enemyObject.transform.position, playerObject.transform.position, stats);
+                runData.stats = CopyStats(stats);
+                runData.steps = BreadthFirstSearchPathfinder.GenerateSearchSteps(grid, enemyObject.transform.position, playerObject.transform.position);
+                return runData;
             }
 
-            return AStarPathfinder.GenerateSearchSteps(grid, enemyObject.transform.position, playerObject.transform.position);
+            PathfindingStats astarStats = PathfindingBenchmarkUI.AStarStats;
+            AStarPathfinder.FindPath(grid, enemyObject.transform.position, playerObject.transform.position, astarStats);
+            runData.stats = CopyStats(astarStats);
+            runData.steps = AStarPathfinder.GenerateSearchSteps(grid, enemyObject.transform.position, playerObject.transform.position);
+            return runData;
         }
 
-        private IEnumerator PlaySteps(List<PathfindingStepData> steps, VisualizationMode mode, Vector3 offset)
+        private IEnumerator PlaySteps(VisualizationRunData runData, VisualizationMode mode, Vector3 offset)
         {
-            for (int i = 0; i < steps.Count; i++)
+            for (int i = 0; i < runData.steps.Count; i++)
             {
-                DrawStep(steps[i], mode, offset);
-                Debug.Log($"Visualization step: {i + 1}/{steps.Count}");
+                DrawStep(runData.steps[i], mode, offset);
+                UpdateStatsText(mode, runData.steps[i], runData, i + 1, runData.steps.Count);
+                Debug.Log($"Visualization step: {i + 1}/{runData.steps.Count}");
                 yield return new WaitForSecondsRealtime(visualizationStepDelay);
             }
 
             autoPlayCoroutine = null;
         }
 
-        private IEnumerator PlayCompareSteps(List<PathfindingStepData> astarSteps, List<PathfindingStepData> bfsSteps)
+        private IEnumerator PlayCompareSteps(VisualizationRunData astarRun, VisualizationRunData bfsRun)
         {
-            int maxStepCount = Mathf.Max(astarSteps.Count, bfsSteps.Count);
+            int maxStepCount = Mathf.Max(astarRun.steps.Count, bfsRun.steps.Count);
             Vector3 astarOffset = new Vector3(-0.08f, 0.08f, 0f);
             Vector3 bfsOffset = new Vector3(0.08f, -0.08f, 0f);
 
             for (int i = 0; i < maxStepCount; i++)
             {
-                if (i < astarSteps.Count)
+                if (i < astarRun.steps.Count)
                 {
-                    DrawStep(astarSteps[i], VisualizationMode.AStar, astarOffset);
+                    DrawStep(astarRun.steps[i], VisualizationMode.AStar, astarOffset);
+                    UpdateStatsText(VisualizationMode.AStar, astarRun.steps[i], astarRun, i + 1, astarRun.steps.Count);
                 }
 
-                if (i < bfsSteps.Count)
+                if (i < bfsRun.steps.Count)
                 {
-                    DrawStep(bfsSteps[i], VisualizationMode.BFS, bfsOffset);
+                    DrawStep(bfsRun.steps[i], VisualizationMode.BFS, bfsOffset);
+                    UpdateStatsText(VisualizationMode.BFS, bfsRun.steps[i], bfsRun, i + 1, bfsRun.steps.Count);
                 }
 
                 Debug.Log($"Visualization step: {i + 1}/{maxStepCount}");
@@ -343,6 +381,225 @@ namespace DungeonCrawler.AI
             }
         }
 
+        private void ShowStatsPanel(bool showAStar, bool showBFS)
+        {
+            EnsureStatsUi();
+            statsRoot.SetActive(true);
+            statsRoot.transform.SetAsLastSibling();
+            CanvasGroup canvasGroup = statsRoot.GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+            {
+                canvasGroup = statsRoot.AddComponent<CanvasGroup>();
+            }
+
+            canvasGroup.alpha = 1f;
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+
+            astarStatsText.transform.parent.gameObject.SetActive(showAStar);
+            bfsStatsText.transform.parent.gameObject.SetActive(showBFS);
+            SetStatsBlockEnabled(astarStatsText, showAStar);
+            SetStatsBlockEnabled(bfsStatsText, showBFS);
+            Debug.Log("Visualization stats root active = true");
+            Debug.Log($"A* stats panel active = {showAStar}");
+            Debug.Log($"BFS stats panel active = {showBFS}");
+        }
+
+        private void EnsureStatsUi()
+        {
+            if (statsRoot != null && astarStatsText != null && bfsStatsText != null)
+            {
+                return;
+            }
+
+            Canvas canvas = FindHudCanvas();
+            if (canvas == null)
+            {
+                GameObject canvasObject = new GameObject("HUDCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                canvas = canvasObject.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            }
+
+            canvas.sortingOrder = Mathf.Max(canvas.sortingOrder, 120);
+            Transform existingRoot = canvas.transform.Find("PathfindingVisualizationStats");
+            bool createdRuntime = existingRoot == null;
+            statsRoot = existingRoot != null ? existingRoot.gameObject : new GameObject("PathfindingVisualizationStats", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup), typeof(CanvasGroup));
+            statsRoot.transform.SetParent(canvas.transform, false);
+            statsRoot.transform.localScale = Vector3.one;
+
+            RectTransform rootRect = statsRoot.GetComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0f, 1f);
+            rootRect.anchorMax = new Vector2(0f, 1f);
+            rootRect.pivot = new Vector2(0f, 1f);
+            rootRect.anchoredPosition = new Vector2(20f, -120f);
+            rootRect.sizeDelta = new Vector2(320f, 180f);
+
+            Image rootImage = statsRoot.GetComponent<Image>();
+            if (rootImage == null)
+            {
+                rootImage = statsRoot.AddComponent<Image>();
+            }
+
+            rootImage.color = new Color(0f, 0f, 0f, 0.65f);
+            rootImage.enabled = true;
+            rootImage.raycastTarget = false;
+
+            VerticalLayoutGroup rootLayout = statsRoot.GetComponent<VerticalLayoutGroup>();
+            rootLayout.childAlignment = TextAnchor.UpperLeft;
+            rootLayout.padding = new RectOffset(10, 10, 10, 10);
+            rootLayout.spacing = 6f;
+            rootLayout.childControlWidth = false;
+            rootLayout.childControlHeight = false;
+            rootLayout.childForceExpandWidth = false;
+            rootLayout.childForceExpandHeight = false;
+
+            astarStatsText = EnsureStatsBlock("AStarStatsPanel", "A* Search\nTime: calculating...\nNodes: 0\nPath Length: 0", astarVisitedColor);
+            bfsStatsText = EnsureStatsBlock("BFSStatsPanel", "BFS Search\nTime: calculating...\nNodes: 0\nPath Length: 0", bfsVisitedColor);
+            statsRoot.SetActive(false);
+            if (createdRuntime)
+            {
+                Debug.Log("Visualization stats UI created runtime");
+            }
+        }
+
+        private Text EnsureStatsBlock(string objectName, string initialText, Color textColor)
+        {
+            Transform existing = statsRoot.transform.Find(objectName);
+            GameObject panelObject = existing != null ? existing.gameObject : new GameObject(objectName, typeof(RectTransform), typeof(Image));
+            panelObject.transform.SetParent(statsRoot.transform, false);
+
+            RectTransform panelRect = panelObject.GetComponent<RectTransform>();
+            panelRect.localScale = Vector3.one;
+            panelRect.sizeDelta = new Vector2(300f, 78f);
+
+            LayoutElement layoutElement = panelObject.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = panelObject.AddComponent<LayoutElement>();
+            }
+
+            layoutElement.preferredWidth = 300f;
+            layoutElement.preferredHeight = 78f;
+            layoutElement.minWidth = 300f;
+            layoutElement.minHeight = 78f;
+
+            Image image = panelObject.GetComponent<Image>();
+            image.color = new Color(0f, 0f, 0f, 0.65f);
+            image.enabled = true;
+            image.raycastTarget = false;
+
+            Transform textTransform = panelObject.transform.Find("Text");
+            GameObject textObject = textTransform != null ? textTransform.gameObject : new GameObject("Text", typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(panelObject.transform, false);
+
+            RectTransform textRect = textObject.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(12f, 8f);
+            textRect.offsetMax = new Vector2(-12f, -8f);
+
+            Text text = textObject.GetComponent<Text>();
+            text.text = initialText;
+            text.font = GetStatsFont();
+            text.fontSize = 22;
+            text.alignment = TextAnchor.UpperLeft;
+            text.color = new Color(textColor.r, textColor.g, textColor.b, 1f);
+            text.enabled = true;
+            text.raycastTarget = false;
+            return text;
+        }
+
+        private void UpdateStatsText(VisualizationMode mode, PathfindingStepData step, VisualizationRunData runData, int currentStep, int totalSteps)
+        {
+            EnsureStatsUi();
+            Text text = mode == VisualizationMode.AStar ? astarStatsText : bfsStatsText;
+            if (text == null)
+            {
+                return;
+            }
+
+            string title = mode == VisualizationMode.AStar ? "A* Search" : "BFS Search";
+            int nodes = step != null ? step.visitedCells.Count : 0;
+            bool finished = step != null && step.isFinished;
+            bool failed = finished && !step.pathFound || finished && runData.stats.lastPathFailed;
+            string timeLine = finished ? $"Time: {runData.stats.lastPathTimeMs:0.###} ms" : "Time: calculating...";
+            string pathLine = finished ? $"Path Length: {runData.stats.pathLength}" : "Path Length: calculating...";
+
+            if (failed)
+            {
+                text.text = $"{title}\nPATH FAILED\nNodes: {nodes}\nPath Length: 0";
+                Debug.Log($"Stats text updated: {text.text}");
+                return;
+            }
+
+            text.text = $"{title}\n{timeLine}\nNodes: {nodes}\n{pathLine}";
+            Debug.Log($"Stats text updated: {text.text}");
+        }
+
+        private void SetStatsBlockEnabled(Text text, bool enabled)
+        {
+            if (text == null)
+            {
+                return;
+            }
+
+            text.enabled = enabled;
+            Image image = text.transform.parent.GetComponent<Image>();
+            if (image != null)
+            {
+                image.enabled = enabled;
+            }
+        }
+
+        private Canvas FindHudCanvas()
+        {
+            GameObject hudCanvasObject = GameObject.Find("HUDCanvas");
+            if (hudCanvasObject != null && hudCanvasObject.TryGetComponent(out Canvas hudCanvas))
+            {
+                return hudCanvas;
+            }
+
+            Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (Canvas canvas in canvases)
+            {
+                if (canvas.name == "HUDCanvas")
+                {
+                    return canvas;
+                }
+            }
+
+            return canvases.Length > 0 ? canvases[0] : null;
+        }
+
+        private PathfindingStats CopyStats(PathfindingStats source)
+        {
+            return new PathfindingStats
+            {
+                lastPathTimeMs = source.lastPathTimeMs,
+                visitedNodes = source.visitedNodes,
+                pathLength = source.pathLength,
+                recalculationCount = source.recalculationCount,
+                lastPathFailed = source.lastPathFailed,
+                visitedPositions = new List<Vector3>(source.visitedPositions)
+            };
+        }
+
+        private Font GetStatsFont()
+        {
+            if (statsFont != null)
+            {
+                return statsFont;
+            }
+
+            statsFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (statsFont == null)
+            {
+                statsFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            }
+
+            return statsFont;
+        }
+
         private Sprite GetSquareSprite(Color color)
         {
             string key = ColorUtility.ToHtmlStringRGBA(color);
@@ -362,6 +619,12 @@ namespace DungeonCrawler.AI
             Sprite createdSprite = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
             spriteCache[key] = createdSprite;
             return createdSprite;
+        }
+
+        private class VisualizationRunData
+        {
+            public List<PathfindingStepData> steps = new List<PathfindingStepData>();
+            public PathfindingStats stats = new PathfindingStats();
         }
     }
 }

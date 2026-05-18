@@ -157,6 +157,7 @@ namespace DungeonCrawler.UI
         {
             VisualizationCameraController.Instance?.ExitVisualizationMode(true);
             visualizationReturnButton?.gameObject.SetActive(false);
+            PathfindingVisualizer.Instance?.HideStatsPanel();
             GameUIManager.Instance?.ReturnToPauseFromVisualization();
             Time.timeScale = 0f;
             Debug.Log("Returned to Pause Menu from Visualization");
@@ -165,6 +166,7 @@ namespace DungeonCrawler.UI
         private void ClearVisualization()
         {
             PathfindingVisualizer.Instance?.ClearVisualization();
+            PathfindingVisualizer.Instance?.HideStatsPanel();
         }
 
         private void AutoPlaySteps()

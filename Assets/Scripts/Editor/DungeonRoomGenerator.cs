@@ -1154,7 +1154,11 @@ RemoveMissingScriptsFromGeneratedObjects();
         private static void SetupMainMenuUI()
         {
             Canvas canvas = EnsureHudCanvas();
-            if (canvas == null) return;
+            if (canvas == null)
+            {
+                Debug.LogWarning("SetupPauseUI: HUDCanvas missing and could not be created.");
+                return;
+            }
 
             Transform existingMenu = canvas.transform.Find("MainMenuPanel");
             GameObject menuObject = existingMenu != null 
@@ -1755,18 +1759,25 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
 
         private static Button CreateOrUpdatePanelButton(Transform parent, string name, Vector2 anchoredPosition, Vector2 size, string label, Color color)
         {
+            if (parent == null)
+            {
+                Debug.LogWarning($"SetupPauseUI: cannot create {name}, parent missing.");
+                return null;
+            }
+
             Transform existingButton = parent.Find(name);
             GameObject buttonObject = existingButton != null
                 ? existingButton.gameObject
-                : new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+                : new GameObject(name);
 
             if (existingButton == null)
             {
                 Undo.RegisterCreatedObjectUndo(buttonObject, $"Create {name}");
                 buttonObject.transform.SetParent(parent, false);
+                Debug.Log($"SetupPauseUI: created missing {name}");
             }
 
-            RectTransform rect = buttonObject.GetComponent<RectTransform>();
+            RectTransform rect = EnsureEditorComponent<RectTransform>(buttonObject, name);
             if (rect != null)
             {
                 rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -1776,30 +1787,27 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
                 rect.sizeDelta = size;
             }
 
-            Image image = buttonObject.GetComponent<Image>();
+            Image image = EnsureEditorComponent<Image>(buttonObject, name);
             if (image != null)
             {
                 image.color = color;
             }
 
-            Button button = buttonObject.GetComponent<Button>();
-            if (button == null)
-            {
-                button = buttonObject.AddComponent<Button>();
-            }
+            Button button = EnsureEditorComponent<Button>(buttonObject, name);
 
             Transform existingText = buttonObject.transform.Find("Text");
             GameObject textObject = existingText != null
                 ? existingText.gameObject
-                : new GameObject("Text", typeof(RectTransform), typeof(Text));
+                : new GameObject("Text");
 
             if (existingText == null)
             {
                 Undo.RegisterCreatedObjectUndo(textObject, $"Create {name} Text");
                 textObject.transform.SetParent(buttonObject.transform, false);
+                Debug.Log($"SetupPauseUI: created missing {name} Text");
             }
 
-            RectTransform textRect = textObject.GetComponent<RectTransform>();
+            RectTransform textRect = EnsureEditorComponent<RectTransform>(textObject, $"{name} Text");
             if (textRect != null)
             {
                 textRect.anchorMin = Vector2.zero;
@@ -1808,7 +1816,7 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
                 textRect.offsetMax = Vector2.zero;
             }
 
-            Text text = textObject.GetComponent<Text>();
+            Text text = EnsureEditorComponent<Text>(textObject, $"{name} Text");
             if (text != null)
             {
                 Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -1824,6 +1832,24 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
             }
 
             return button;
+        }
+
+        private static T EnsureEditorComponent<T>(GameObject target, string objectName) where T : Component
+        {
+            if (target == null)
+            {
+                Debug.LogWarning($"SetupPauseUI: missing GameObject for {objectName}");
+                return null;
+            }
+
+            T component = target.GetComponent<T>();
+            if (component == null)
+            {
+                component = Undo.AddComponent<T>(target);
+                Debug.Log($"SetupPauseUI: created missing {objectName} {typeof(T).Name}");
+            }
+
+            return component;
         }
 
         private static void SetupFloorSelectUI()
@@ -1920,18 +1946,25 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
 
         private static Text CreateOrUpdatePanelText(Transform parent, string name, Vector2 anchoredPosition, Vector2 size, string label, int fontSize)
         {
+            if (parent == null)
+            {
+                Debug.LogWarning($"SetupPauseUI: cannot create {name}, parent missing.");
+                return null;
+            }
+
             Transform existingText = parent.Find(name);
             GameObject textObject = existingText != null
                 ? existingText.gameObject
-                : new GameObject(name, typeof(RectTransform), typeof(Text));
+                : new GameObject(name);
 
             if (existingText == null)
             {
                 Undo.RegisterCreatedObjectUndo(textObject, $"Create {name}");
                 textObject.transform.SetParent(parent, false);
+                Debug.Log($"SetupPauseUI: created missing {name}");
             }
 
-            RectTransform rect = textObject.GetComponent<RectTransform>();
+            RectTransform rect = EnsureEditorComponent<RectTransform>(textObject, name);
             if (rect != null)
             {
                 rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -1941,7 +1974,7 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
                 rect.sizeDelta = size;
             }
 
-            Text text = textObject.GetComponent<Text>();
+            Text text = EnsureEditorComponent<Text>(textObject, name);
             if (text != null)
             {
                 Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -2068,30 +2101,36 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
 
             // 1. Pause Button on HUD
             Transform existingPauseBtn = canvas.transform.Find("PauseButton");
-            GameObject pauseBtnObj = existingPauseBtn != null ? existingPauseBtn.gameObject : new GameObject("PauseButton", typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(UnityEngine.UI.Button));
+            GameObject pauseBtnObj = existingPauseBtn != null ? existingPauseBtn.gameObject : new GameObject("PauseButton");
             if (existingPauseBtn == null)
             {
                 Undo.RegisterCreatedObjectUndo(pauseBtnObj, "Create Pause Button");
                 pauseBtnObj.transform.SetParent(canvas.transform, false);
+                Debug.Log("SetupPauseUI: created missing PauseButton");
             }
 
-            RectTransform pauseBtnRect = pauseBtnObj.GetComponent<RectTransform>();
+            RectTransform pauseBtnRect = EnsureEditorComponent<RectTransform>(pauseBtnObj, "PauseButton");
             pauseBtnRect.anchorMin = new Vector2(1f, 1f);
             pauseBtnRect.anchorMax = new Vector2(1f, 1f);
             pauseBtnRect.pivot = new Vector2(1f, 1f);
             pauseBtnRect.anchoredPosition = new Vector2(-20f, -320f); // Below Minimap
             pauseBtnRect.sizeDelta = new Vector2(100f, 40f);
 
-            UnityEngine.UI.Image pauseBtnImg = pauseBtnObj.GetComponent<UnityEngine.UI.Image>();
+            UnityEngine.UI.Image pauseBtnImg = EnsureEditorComponent<UnityEngine.UI.Image>(pauseBtnObj, "PauseButton");
             pauseBtnImg.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
 
-            UnityEngine.UI.Button pauseBtn = pauseBtnObj.GetComponent<UnityEngine.UI.Button>();
+            UnityEngine.UI.Button pauseBtn = EnsureEditorComponent<UnityEngine.UI.Button>(pauseBtnObj, "PauseButton");
             
             Transform existingPauseText = pauseBtnObj.transform.Find("Text");
-            GameObject pauseTextObj = existingPauseText != null ? existingPauseText.gameObject : new GameObject("Text", typeof(RectTransform), typeof(UnityEngine.UI.Text));
-            if (existingPauseText == null) pauseTextObj.transform.SetParent(pauseBtnObj.transform, false);
+            GameObject pauseTextObj = existingPauseText != null ? existingPauseText.gameObject : new GameObject("Text");
+            if (existingPauseText == null)
+            {
+                Undo.RegisterCreatedObjectUndo(pauseTextObj, "Create Pause Button Text");
+                pauseTextObj.transform.SetParent(pauseBtnObj.transform, false);
+                Debug.Log("SetupPauseUI: created missing PauseButton Text");
+            }
             
-            UnityEngine.UI.Text pauseText = pauseTextObj.GetComponent<UnityEngine.UI.Text>();
+            UnityEngine.UI.Text pauseText = EnsureEditorComponent<UnityEngine.UI.Text>(pauseTextObj, "PauseButton Text");
             pauseText.text = "Pause";
             pauseText.fontSize = 20;
             pauseText.color = Color.white;
@@ -2099,7 +2138,7 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
             Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (legacyFont != null) pauseText.font = legacyFont;
             
-            RectTransform pauseTextRect = pauseTextObj.GetComponent<RectTransform>();
+            RectTransform pauseTextRect = EnsureEditorComponent<RectTransform>(pauseTextObj, "PauseButton Text");
             pauseTextRect.anchorMin = Vector2.zero;
             pauseTextRect.anchorMax = Vector2.one;
             pauseTextRect.offsetMin = Vector2.zero;
@@ -2107,37 +2146,43 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
 
             // 2. Pause Panel
             Transform existingPausePanel = canvas.transform.Find("PausePanel");
-            GameObject pausePanelObj = existingPausePanel != null ? existingPausePanel.gameObject : new GameObject("PausePanel", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            GameObject pausePanelObj = existingPausePanel != null ? existingPausePanel.gameObject : new GameObject("PausePanel");
             if (existingPausePanel == null)
             {
                 Undo.RegisterCreatedObjectUndo(pausePanelObj, "Create Pause Panel");
                 pausePanelObj.transform.SetParent(canvas.transform, false);
+                Debug.Log("SetupPauseUI: created missing PausePanel");
             }
 
-            RectTransform pausePanelRect = pausePanelObj.GetComponent<RectTransform>();
+            RectTransform pausePanelRect = EnsureEditorComponent<RectTransform>(pausePanelObj, "PausePanel");
             pausePanelRect.anchorMin = Vector2.zero;
             pausePanelRect.anchorMax = Vector2.one;
             pausePanelRect.offsetMin = Vector2.zero;
             pausePanelRect.offsetMax = Vector2.zero;
 
-            UnityEngine.UI.Image pausePanelImg = pausePanelObj.GetComponent<UnityEngine.UI.Image>();
+            UnityEngine.UI.Image pausePanelImg = EnsureEditorComponent<UnityEngine.UI.Image>(pausePanelObj, "PausePanel");
             pausePanelImg.color = new Color(0f, 0f, 0f, 0.42f);
 
             Transform existingCard = pausePanelObj.transform.Find("PauseMenuCard");
-            GameObject cardObj = existingCard != null ? existingCard.gameObject : new GameObject("PauseMenuCard", typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(VerticalLayoutGroup));
-            if (existingCard == null) cardObj.transform.SetParent(pausePanelObj.transform, false);
+            GameObject cardObj = existingCard != null ? existingCard.gameObject : new GameObject("PauseMenuCard");
+            if (existingCard == null)
+            {
+                Undo.RegisterCreatedObjectUndo(cardObj, "Create PauseMenuCard");
+                cardObj.transform.SetParent(pausePanelObj.transform, false);
+                Debug.Log("SetupPauseUI: created missing PauseMenuCard");
+            }
 
-            RectTransform cardRect = cardObj.GetComponent<RectTransform>();
+            RectTransform cardRect = EnsureEditorComponent<RectTransform>(cardObj, "PauseMenuCard");
             cardRect.anchorMin = new Vector2(0.5f, 0.5f);
             cardRect.anchorMax = new Vector2(0.5f, 0.5f);
             cardRect.pivot = new Vector2(0.5f, 0.5f);
             cardRect.anchoredPosition = Vector2.zero;
             cardRect.sizeDelta = new Vector2(420f, 620f);
 
-            UnityEngine.UI.Image cardImg = cardObj.GetComponent<UnityEngine.UI.Image>();
+            UnityEngine.UI.Image cardImg = EnsureEditorComponent<UnityEngine.UI.Image>(cardObj, "PauseMenuCard");
             cardImg.color = new Color(0.035f, 0.038f, 0.045f, 0.88f);
 
-            VerticalLayoutGroup cardLayout = cardObj.GetComponent<VerticalLayoutGroup>();
+            VerticalLayoutGroup cardLayout = EnsureEditorComponent<VerticalLayoutGroup>(cardObj, "PauseMenuCard");
             cardLayout.childAlignment = TextAnchor.UpperCenter;
             cardLayout.padding = new RectOffset(0, 0, 24, 24);
             cardLayout.spacing = 10f;
@@ -2150,17 +2195,27 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
             title.fontStyle = FontStyle.Bold;
 
             Transform existingGameplay = cardObj.transform.Find("GameplayButtons");
-            GameObject gameplayObj = existingGameplay != null ? existingGameplay.gameObject : new GameObject("GameplayButtons", typeof(RectTransform), typeof(VerticalLayoutGroup));
-            if (existingGameplay == null) gameplayObj.transform.SetParent(cardObj.transform, false);
-            ConfigurePauseButtonGroup(gameplayObj.GetComponent<RectTransform>(), gameplayObj.GetComponent<VerticalLayoutGroup>(), 159f);
+            GameObject gameplayObj = existingGameplay != null ? existingGameplay.gameObject : new GameObject("GameplayButtons");
+            if (existingGameplay == null)
+            {
+                Undo.RegisterCreatedObjectUndo(gameplayObj, "Create GameplayButtons");
+                gameplayObj.transform.SetParent(cardObj.transform, false);
+                Debug.Log("SetupPauseUI: created missing GameplayButtons");
+            }
+            ConfigurePauseButtonGroup(EnsureEditorComponent<RectTransform>(gameplayObj, "GameplayButtons"), EnsureEditorComponent<VerticalLayoutGroup>(gameplayObj, "GameplayButtons"), 159f);
 
             Text visualizationTitle = CreateOrUpdatePanelText(cardObj.transform, "VisualizationTitle", Vector2.zero, new Vector2(360f, 34f), "Pathfinding Visualization", 22);
             visualizationTitle.fontStyle = FontStyle.Bold;
 
             Transform existingVisualization = cardObj.transform.Find("VisualizationButtons");
-            GameObject visualizationObj = existingVisualization != null ? existingVisualization.gameObject : new GameObject("VisualizationButtons", typeof(RectTransform), typeof(VerticalLayoutGroup));
-            if (existingVisualization == null) visualizationObj.transform.SetParent(cardObj.transform, false);
-            ConfigurePauseButtonGroup(visualizationObj.GetComponent<RectTransform>(), visualizationObj.GetComponent<VerticalLayoutGroup>(), 282f);
+            GameObject visualizationObj = existingVisualization != null ? existingVisualization.gameObject : new GameObject("VisualizationButtons");
+            if (existingVisualization == null)
+            {
+                Undo.RegisterCreatedObjectUndo(visualizationObj, "Create VisualizationButtons");
+                visualizationObj.transform.SetParent(cardObj.transform, false);
+                Debug.Log("SetupPauseUI: created missing VisualizationButtons");
+            }
+            ConfigurePauseButtonGroup(EnsureEditorComponent<RectTransform>(visualizationObj, "VisualizationButtons"), EnsureEditorComponent<VerticalLayoutGroup>(visualizationObj, "VisualizationButtons"), 282f);
 
             Vector2 btnSize = new Vector2(280, 36);
             UnityEngine.UI.Button resumeBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "ResumeButton", Vector2.zero, btnSize, "Resume", new Color(0.2f, 0.4f, 0.2f));
@@ -2168,7 +2223,13 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
             UnityEngine.UI.Button saveBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "SaveButton", Vector2.zero, btnSize, "Save", new Color(0.2f, 0.2f, 0.4f));
             UnityEngine.UI.Button loadBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "LoadButton", Vector2.zero, btnSize, "Load", new Color(0.3f, 0.2f, 0.4f));
             UnityEngine.UI.Button visualizationReturnBtn = CreateOrUpdatePanelButton(canvas.transform, "VisualizationReturnButton", Vector2.zero, new Vector2(120f, 42f), "Return", new Color(0.12f, 0.12f, 0.14f, 0.92f));
-            RectTransform visualizationReturnRect = visualizationReturnBtn.GetComponent<RectTransform>();
+            if (visualizationReturnBtn == null)
+            {
+                Debug.LogWarning("SetupPauseUI: VisualizationReturnButton could not be created.");
+                return;
+            }
+
+            RectTransform visualizationReturnRect = EnsureEditorComponent<RectTransform>(visualizationReturnBtn.gameObject, "VisualizationReturnButton");
             if (visualizationReturnRect != null)
             {
                 visualizationReturnRect.anchorMin = new Vector2(1f, 1f);
@@ -2178,6 +2239,42 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
                 visualizationReturnRect.sizeDelta = new Vector2(120f, 42f);
             }
             visualizationReturnBtn.gameObject.SetActive(false);
+
+            Transform existingStatsRoot = canvas.transform.Find("PathfindingVisualizationStats");
+            GameObject statsRoot = existingStatsRoot != null ? existingStatsRoot.gameObject : new GameObject("PathfindingVisualizationStats");
+            if (existingStatsRoot == null)
+            {
+                Undo.RegisterCreatedObjectUndo(statsRoot, "Create PathfindingVisualizationStats");
+                statsRoot.transform.SetParent(canvas.transform, false);
+                Debug.Log("SetupPauseUI: created missing PathfindingVisualizationStats");
+            }
+
+            RectTransform statsRootRect = EnsureEditorComponent<RectTransform>(statsRoot, "PathfindingVisualizationStats");
+            statsRootRect.anchorMin = new Vector2(0f, 1f);
+            statsRootRect.anchorMax = new Vector2(0f, 1f);
+            statsRootRect.pivot = new Vector2(0f, 1f);
+            statsRootRect.anchoredPosition = new Vector2(20f, -120f);
+            statsRootRect.sizeDelta = new Vector2(320f, 180f);
+            statsRootRect.localScale = Vector3.one;
+
+            UnityEngine.UI.Image statsImage = EnsureEditorComponent<UnityEngine.UI.Image>(statsRoot, "PathfindingVisualizationStats");
+            statsImage.color = new Color(0f, 0f, 0f, 0.65f);
+            statsImage.raycastTarget = false;
+
+            CanvasGroup statsCanvasGroup = EnsureEditorComponent<CanvasGroup>(statsRoot, "PathfindingVisualizationStats");
+            statsCanvasGroup.alpha = 1f;
+            statsCanvasGroup.blocksRaycasts = false;
+            statsCanvasGroup.interactable = false;
+
+            VerticalLayoutGroup statsLayout = EnsureEditorComponent<VerticalLayoutGroup>(statsRoot, "PathfindingVisualizationStats");
+            statsLayout.childAlignment = TextAnchor.UpperLeft;
+            statsLayout.padding = new RectOffset(10, 10, 10, 10);
+            statsLayout.spacing = 6f;
+            statsLayout.childControlHeight = false;
+            statsLayout.childControlWidth = false;
+            statsLayout.childForceExpandHeight = false;
+            statsLayout.childForceExpandWidth = false;
+            statsRoot.SetActive(false);
 
             // Component setup
             PauseMenuUI pauseMenu = pausePanelObj.GetComponent<PauseMenuUI>();
@@ -2196,6 +2293,8 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
 
             pausePanelObj.SetActive(false);
             EditorUtility.SetDirty(pausePanelObj);
+            EditorUtility.SetDirty(canvas.gameObject);
+            Debug.Log("SetupPauseUI completed");
         }
 
         private static void ConfigurePauseButtonGroup(RectTransform rectTransform, VerticalLayoutGroup layout, float height)

@@ -1,0 +1,15 @@
+Licensed under CC-0 (Public Domain).
+Status: Released to public
+Creation Date:21.11.2023
+Release Date:01.28.2024
+Drawed by nyarlko. (With One by Wacom Medium + Clip Studio Paint Pro)
+Website: https://nyarlko.com/
+Uploaded to: https://opengameart.org/users/nyarlko
+<3 Thanks for downloading it! <3
+Unity Sprite Animation Settings
+Automatic Center Delete Existing Slice
+Unity does good job of adjusting all of it except height.
+set h to 64 all of them then delete unneccesary ones like text and shadows selected as wrong.
+y changes each line but same for same line.
+
+Just drag and drop the slime folder to unity project.

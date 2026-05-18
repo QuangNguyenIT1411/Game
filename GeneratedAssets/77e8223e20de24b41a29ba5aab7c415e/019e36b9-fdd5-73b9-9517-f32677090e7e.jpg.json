@@ -1,0 +1,28 @@
+{
+    "asset": "77e8223e20de24b41a29ba5aab7c415e",
+    "fileName": "019e36b9-fdd5-73b9-9517-f32677090e7e.jpg",
+    "prompt": "The word 'INVENTORY' in epic golden fantasy RPG font, pixel art, high contrast, isolated on white background, no other elements.",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

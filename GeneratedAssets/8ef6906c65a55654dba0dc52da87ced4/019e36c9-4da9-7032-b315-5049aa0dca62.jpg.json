@@ -1,0 +1,28 @@
+{
+    "asset": "8ef6906c65a55654dba0dc52da87ced4",
+    "fileName": "019e36c9-4da9-7032-b315-5049aa0dca62.jpg",
+    "prompt": "A cinematic pixel art background of a dark mysterious dungeon entrance, glowing torches, stone pillars, fantasy RPG style, 16:9 aspect ratio, high quality, matching game tiles aesthetic.",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

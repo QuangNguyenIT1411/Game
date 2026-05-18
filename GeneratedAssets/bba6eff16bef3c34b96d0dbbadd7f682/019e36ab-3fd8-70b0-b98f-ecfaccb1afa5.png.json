@@ -1,0 +1,38 @@
+{
+    "asset": "bba6eff16bef3c34b96d0dbbadd7f682",
+    "fileName": "019e36ab-3fd8-70b0-b98f-ecfaccb1afa5.png",
+    "prompt": "Stylized golden text art 'EQUIPMENT', bold embossed letters, fantasy RPG font, pixel art, isolated on white background, high contrast, matching dungeon theme.",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": [
+            {
+                "doodleReferenceType": 7,
+                "doodle": [],
+                "label": "Image",
+                "strength": 0.25,
+                "invertStrength": false,
+                "assetReferenceGuid": "403e25a660fdb6c469fb09cdc4e3ae23",
+                "unlabeledIndex": -1
+            }
+        ]
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

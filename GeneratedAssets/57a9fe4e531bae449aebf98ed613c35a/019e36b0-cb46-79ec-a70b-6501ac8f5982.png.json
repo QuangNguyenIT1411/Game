@@ -1,0 +1,38 @@
+{
+    "asset": "57a9fe4e531bae449aebf98ed613c35a",
+    "fileName": "019e36b0-cb46-79ec-a70b-6501ac8f5982.png",
+    "prompt": "An ornate fantasy RPG UI panel, dark carved stone texture, gold trim, 9-slice compatible, pixel art style, matching dungeon aesthetics, high detail, isolated on white background. Clear distinct corner and edge patterns for slicing.",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": [
+            {
+                "doodleReferenceType": 7,
+                "doodle": [],
+                "label": "Image",
+                "strength": 0.25,
+                "invertStrength": false,
+                "assetReferenceGuid": "403e25a660fdb6c469fb09cdc4e3ae23",
+                "unlabeledIndex": -1
+            }
+        ]
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

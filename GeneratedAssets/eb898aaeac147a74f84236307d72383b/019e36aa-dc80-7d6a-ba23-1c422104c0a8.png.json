@@ -1,0 +1,38 @@
+{
+    "asset": "eb898aaeac147a74f84236307d72383b",
+    "fileName": "019e36aa-dc80-7d6a-ba23-1c422104c0a8.png",
+    "prompt": "A high-quality 9-slice UI panel frame, dark stone texture, ornate carved borders, fantasy RPG style, pixel art, matching dungeon stone walls, dark grey and brown tones, isolated on white background. Clear distinct borders for 9-slicing.",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": [
+            {
+                "doodleReferenceType": 7,
+                "doodle": [],
+                "label": "Image",
+                "strength": 0.25,
+                "invertStrength": false,
+                "assetReferenceGuid": "403e25a660fdb6c469fb09cdc4e3ae23",
+                "unlabeledIndex": -1
+            }
+        ]
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

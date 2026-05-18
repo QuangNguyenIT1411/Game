@@ -1,0 +1,28 @@
+{
+    "asset": "20ccd2b13c111b44cb078276153bb0e9",
+    "fileName": "019e36b9-fc55-7d83-a6cf-88f858934589.jpg",
+    "prompt": "The word 'STATUS' in epic golden fantasy RPG font, pixel art, high contrast, isolated on white background, no other elements.",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

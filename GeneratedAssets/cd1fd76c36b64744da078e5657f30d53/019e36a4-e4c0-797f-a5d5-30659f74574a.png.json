@@ -1,0 +1,28 @@
+{
+    "asset": "cd1fd76c36b64744da078e5657f30d53",
+    "fileName": "019e36a4-e4c0-797f-a5d5-30659f74574a.png",
+    "prompt": "Dark grey stone brick texture, seamless, tileable, pixel art style, matching dungeon tiles style, used for UI panel background, flat lighting, no highlights",
+    "negativePrompt": "",
+    "model": "flux-2-dev",
+    "modelName": "Flux 2 (Dev)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

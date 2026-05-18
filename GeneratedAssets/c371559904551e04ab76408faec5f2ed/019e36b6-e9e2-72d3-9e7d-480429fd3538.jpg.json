@@ -1,0 +1,38 @@
+{
+    "asset": "c371559904551e04ab76408faec5f2ed",
+    "fileName": "019e36b6-e9e2-72d3-9e7d-480429fd3538.jpg",
+    "prompt": "A clean, dark grey stone border frame for a game UI panel, ornate but subtle, no text, pixel art style, matching dungeon tiles, high contrast, isolated on white background. Clear edges for 9-slicing.",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": [
+            {
+                "doodleReferenceType": 7,
+                "doodle": [],
+                "label": "Image",
+                "strength": 0.25,
+                "invertStrength": false,
+                "assetReferenceGuid": "403e25a660fdb6c469fb09cdc4e3ae23",
+                "unlabeledIndex": -1
+            }
+        ]
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

@@ -1,0 +1,28 @@
+{
+    "asset": "5a10316e44e826c438e720c885690f98",
+    "fileName": "019e36d7-468d-7133-bc5a-dfea36020eb9.jpg",
+    "prompt": "A dark, moody pixel art background for a dungeon floor, subtle stone brick textures, faint glowing cracks, shadows, atmospheric lighting, fantasy RPG style, 16:9 aspect ratio, high quality, matching game tiles aesthetic.",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

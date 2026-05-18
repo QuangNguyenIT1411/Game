@@ -17,7 +17,14 @@ namespace DungeonCrawler.Enemy
     {
 public enum PathfindingMode { AStar, BFS }
 
+public enum DetectionMode
+{
+    Range,
+    WholeMap
+}
+
         [SerializeField] private PathfindingMode pathfindingMode = PathfindingMode.AStar;
+[SerializeField] private DetectionMode detectionMode = DetectionMode.Range;
 [SerializeField] private float moveSpeed = 3f;
         [SerializeField] private float detectionRange = 20f;
         [SerializeField] private float attackRange = 1.5f;
@@ -91,6 +98,12 @@ public bool IsChasing => isChasing;
         {
             get => detectionRange;
             set => detectionRange = Mathf.Max(0f, value);
+        }
+
+        public DetectionMode EnemyDetectionMode
+        {
+            get => detectionMode;
+            set => detectionMode = value;
         }
 
         public float AttackRange
@@ -435,7 +448,8 @@ if (IsPlayerDead())
             Vector2 toTarget = playerPosition - enemyPosition;
 
             float stopDistance = enableDebugLogs ? 0.1f : attackRange;
-            if (distanceToTarget > detectionRange || distanceToTarget <= stopDistance)
+            bool targetOutsideDetection = detectionMode == DetectionMode.Range && distanceToTarget > detectionRange;
+            if (targetOutsideDetection || distanceToTarget <= stopDistance)
 {
                 if (distanceToTarget > 0.001f)
                 {

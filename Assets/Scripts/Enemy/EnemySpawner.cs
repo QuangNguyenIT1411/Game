@@ -58,6 +58,7 @@ namespace DungeonCrawler.Enemy
             if (astar != null)
             {
                 astar.name = "Enemy_AStar_Test";
+                ConfigureBenchmarkDetection(astar);
                 Debug.Log($"Spawned A* test enemy at {astarPos}");
             }
 
@@ -65,6 +66,7 @@ namespace DungeonCrawler.Enemy
             if (bfs != null)
             {
                 bfs.name = "Enemy_BFS_Test";
+                ConfigureBenchmarkDetection(bfs);
                 Debug.Log($"Spawned BFS test enemy at {bfsPos}");
             }
         }
@@ -269,6 +271,7 @@ namespace DungeonCrawler.Enemy
             if (enemyController != null)
             {
                 enemyController.Mode = mode;
+                enemyController.EnemyDetectionMode = EnemyController.DetectionMode.Range;
                 enemyController.MoveSpeed = stats != null ? stats.MoveSpeed : 3f;
                 enemyController.DetectionRange = 20f;
                 enemyController.AttackRange = 1.5f;
@@ -299,7 +302,20 @@ namespace DungeonCrawler.Enemy
             }
 
             CreateEnemyLabel(enemy, mode);
+        }
+
+        private static void ConfigureBenchmarkDetection(GameObject enemy)
+        {
+            EnemyController enemyController = enemy != null ? enemy.GetComponent<EnemyController>() : null;
+            if (enemyController == null)
+            {
+                return;
             }
+
+            enemyController.EnemyDetectionMode = EnemyController.DetectionMode.WholeMap;
+            enemyController.DetectionRange = float.MaxValue;
+            Debug.Log($"{enemy.name} detection mode set to WholeMap", enemy);
+        }
 
             private static void CreateEnemyLabel(GameObject enemy, EnemyController.PathfindingMode mode)
             {

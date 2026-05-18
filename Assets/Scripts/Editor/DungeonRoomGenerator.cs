@@ -2121,36 +2121,52 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
             pausePanelRect.offsetMax = Vector2.zero;
 
             UnityEngine.UI.Image pausePanelImg = pausePanelObj.GetComponent<UnityEngine.UI.Image>();
-            pausePanelImg.color = new Color(0f, 0f, 0f, 0.85f);
+            pausePanelImg.color = new Color(0f, 0f, 0f, 0.42f);
 
-            // Title
-            Text title = CreateOrUpdatePanelText(pausePanelObj.transform, "Title", new Vector2(0, 150), new Vector2(300, 50), "Paused", 36);
-            
-            // Buttons Container
-            Transform existingContainer = pausePanelObj.transform.Find("Buttons");
-            GameObject containerObj = existingContainer != null ? existingContainer.gameObject : new GameObject("Buttons", typeof(RectTransform), typeof(UnityEngine.UI.VerticalLayoutGroup));
-            if (existingContainer == null) containerObj.transform.SetParent(pausePanelObj.transform, false);
-            
-            RectTransform containerRect = containerObj.GetComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(0.5f, 0.5f);
-            containerRect.anchorMax = new Vector2(0.5f, 0.5f);
-            containerRect.pivot = new Vector2(0.5f, 0.5f);
-            containerRect.anchoredPosition = Vector2.zero;
-            containerRect.sizeDelta = new Vector2(250, 300);
+            Transform existingCard = pausePanelObj.transform.Find("PauseMenuCard");
+            GameObject cardObj = existingCard != null ? existingCard.gameObject : new GameObject("PauseMenuCard", typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(VerticalLayoutGroup));
+            if (existingCard == null) cardObj.transform.SetParent(pausePanelObj.transform, false);
 
-            VerticalLayoutGroup vlg = containerObj.GetComponent<VerticalLayoutGroup>();
-            vlg.childAlignment = TextAnchor.MiddleCenter;
-            vlg.spacing = 15f;
-            vlg.childControlHeight = false;
-            vlg.childControlWidth = false;
-            vlg.childForceExpandHeight = false;
-            vlg.childForceExpandWidth = false;
+            RectTransform cardRect = cardObj.GetComponent<RectTransform>();
+            cardRect.anchorMin = new Vector2(0.5f, 0.5f);
+            cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.pivot = new Vector2(0.5f, 0.5f);
+            cardRect.anchoredPosition = Vector2.zero;
+            cardRect.sizeDelta = new Vector2(420f, 620f);
 
-            Vector2 btnSize = new Vector2(220, 45);
-            UnityEngine.UI.Button resumeBtn = CreateOrUpdatePanelButton(containerObj.transform, "ResumeButton", Vector2.zero, btnSize, "Resume", new Color(0.2f, 0.4f, 0.2f));
-            UnityEngine.UI.Button villageBtn = CreateOrUpdatePanelButton(containerObj.transform, "VillageButton", Vector2.zero, btnSize, "Return to Village", new Color(0.4f, 0.3f, 0.2f));
-            UnityEngine.UI.Button saveBtn = CreateOrUpdatePanelButton(containerObj.transform, "SaveButton", Vector2.zero, btnSize, "Save", new Color(0.2f, 0.2f, 0.4f));
-            UnityEngine.UI.Button loadBtn = CreateOrUpdatePanelButton(containerObj.transform, "LoadButton", Vector2.zero, btnSize, "Load", new Color(0.3f, 0.2f, 0.4f));
+            UnityEngine.UI.Image cardImg = cardObj.GetComponent<UnityEngine.UI.Image>();
+            cardImg.color = new Color(0.035f, 0.038f, 0.045f, 0.88f);
+
+            VerticalLayoutGroup cardLayout = cardObj.GetComponent<VerticalLayoutGroup>();
+            cardLayout.childAlignment = TextAnchor.UpperCenter;
+            cardLayout.padding = new RectOffset(0, 0, 24, 24);
+            cardLayout.spacing = 10f;
+            cardLayout.childControlHeight = false;
+            cardLayout.childControlWidth = false;
+            cardLayout.childForceExpandHeight = false;
+            cardLayout.childForceExpandWidth = false;
+
+            Text title = CreateOrUpdatePanelText(cardObj.transform, "Title", Vector2.zero, new Vector2(360f, 48f), "PAUSED", 32);
+            title.fontStyle = FontStyle.Bold;
+
+            Transform existingGameplay = cardObj.transform.Find("GameplayButtons");
+            GameObject gameplayObj = existingGameplay != null ? existingGameplay.gameObject : new GameObject("GameplayButtons", typeof(RectTransform), typeof(VerticalLayoutGroup));
+            if (existingGameplay == null) gameplayObj.transform.SetParent(cardObj.transform, false);
+            ConfigurePauseButtonGroup(gameplayObj.GetComponent<RectTransform>(), gameplayObj.GetComponent<VerticalLayoutGroup>(), 159f);
+
+            Text visualizationTitle = CreateOrUpdatePanelText(cardObj.transform, "VisualizationTitle", Vector2.zero, new Vector2(360f, 34f), "Pathfinding Visualization", 22);
+            visualizationTitle.fontStyle = FontStyle.Bold;
+
+            Transform existingVisualization = cardObj.transform.Find("VisualizationButtons");
+            GameObject visualizationObj = existingVisualization != null ? existingVisualization.gameObject : new GameObject("VisualizationButtons", typeof(RectTransform), typeof(VerticalLayoutGroup));
+            if (existingVisualization == null) visualizationObj.transform.SetParent(cardObj.transform, false);
+            ConfigurePauseButtonGroup(visualizationObj.GetComponent<RectTransform>(), visualizationObj.GetComponent<VerticalLayoutGroup>(), 282f);
+
+            Vector2 btnSize = new Vector2(280, 36);
+            UnityEngine.UI.Button resumeBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "ResumeButton", Vector2.zero, btnSize, "Resume", new Color(0.2f, 0.4f, 0.2f));
+            UnityEngine.UI.Button villageBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "VillageButton", Vector2.zero, btnSize, "Return to Village", new Color(0.4f, 0.3f, 0.2f));
+            UnityEngine.UI.Button saveBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "SaveButton", Vector2.zero, btnSize, "Save", new Color(0.2f, 0.2f, 0.4f));
+            UnityEngine.UI.Button loadBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "LoadButton", Vector2.zero, btnSize, "Load", new Color(0.3f, 0.2f, 0.4f));
 
             // Component setup
             PauseMenuUI pauseMenu = pausePanelObj.GetComponent<PauseMenuUI>();
@@ -2169,6 +2185,26 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
 
             pausePanelObj.SetActive(false);
             EditorUtility.SetDirty(pausePanelObj);
+        }
+
+        private static void ConfigurePauseButtonGroup(RectTransform rectTransform, VerticalLayoutGroup layout, float height)
+        {
+            if (rectTransform != null)
+            {
+                rectTransform.sizeDelta = new Vector2(320f, height);
+            }
+
+            if (layout == null)
+            {
+                return;
+            }
+
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.spacing = 5f;
+            layout.childControlHeight = false;
+            layout.childControlWidth = false;
+            layout.childForceExpandHeight = false;
+            layout.childForceExpandWidth = false;
         }
 
         private static void SetupMinimapUI()

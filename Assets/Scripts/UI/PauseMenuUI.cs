@@ -1,8 +1,8 @@
-using UnityEngine;
-using UnityEngine.UI;
 using DungeonCrawler.AI;
 using DungeonCrawler.Dungeon;
 using DungeonCrawler.Save;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace DungeonCrawler.UI
 {
@@ -24,6 +24,11 @@ namespace DungeonCrawler.UI
         [Header("Visualization")]
         [SerializeField] private bool clearOnResume = true;
 
+        private RectTransform cardRect;
+        private RectTransform gameplayButtonsRoot;
+        private RectTransform visualizationButtonsRoot;
+        private Font cachedFont;
+
         public void Bind(Button resume, Button village, Button save, Button load)
         {
             resumeButton = resume;
@@ -31,13 +36,13 @@ namespace DungeonCrawler.UI
             saveButton = save;
             loadButton = load;
 
+            RebuildLayout();
             SetupListeners();
         }
 
         private void Start()
         {
-            EnsureVisualizationButtons();
-            ArrangeButtons();
+            RebuildLayout();
             SetupListeners();
             RefreshDungeonButtons();
             Debug.Log("Pause UI initialized");
@@ -45,79 +50,35 @@ namespace DungeonCrawler.UI
 
         private void OnEnable()
         {
-            EnsureVisualizationButtons();
-            ArrangeButtons();
+            RebuildLayout();
             SetupListeners();
             RefreshDungeonButtons();
         }
 
         private void SetupListeners()
         {
-            if (resumeButton != null)
+            SetupButton(resumeButton, Resume);
+            SetupButton(villageButton, ReturnToVillage);
+            SetupButton(saveButton, SaveGame);
+            SetupButton(loadButton, LoadGame);
+            SetupButton(showAStarButton, ShowAStarSearch);
+            SetupButton(showBFSButton, ShowBFSSearch);
+            SetupButton(compareButton, CompareSearches);
+            SetupButton(clearVisualizationButton, ClearVisualization);
+            SetupButton(nextStepButton, AutoPlaySteps);
+            SetupButton(autoPlayButton, AutoPlaySteps);
+            SetupButton(stopAutoButton, StopAutoPlay);
+        }
+
+        private void SetupButton(Button button, UnityEngine.Events.UnityAction action)
+        {
+            if (button == null)
             {
-                resumeButton.onClick.RemoveAllListeners();
-                resumeButton.onClick.AddListener(Resume);
+                return;
             }
 
-            if (villageButton != null)
-            {
-                villageButton.onClick.RemoveAllListeners();
-                villageButton.onClick.AddListener(ReturnToVillage);
-            }
-
-            if (saveButton != null)
-            {
-                saveButton.onClick.RemoveAllListeners();
-                saveButton.onClick.AddListener(SaveGame);
-            }
-
-            if (loadButton != null)
-            {
-                loadButton.onClick.RemoveAllListeners();
-                loadButton.onClick.AddListener(LoadGame);
-            }
-
-            if (showAStarButton != null)
-            {
-                showAStarButton.onClick.RemoveAllListeners();
-                showAStarButton.onClick.AddListener(ShowAStarSearch);
-            }
-
-            if (showBFSButton != null)
-            {
-                showBFSButton.onClick.RemoveAllListeners();
-                showBFSButton.onClick.AddListener(ShowBFSSearch);
-            }
-
-            if (compareButton != null)
-            {
-                compareButton.onClick.RemoveAllListeners();
-                compareButton.onClick.AddListener(CompareSearches);
-            }
-
-            if (clearVisualizationButton != null)
-            {
-                clearVisualizationButton.onClick.RemoveAllListeners();
-                clearVisualizationButton.onClick.AddListener(ClearVisualization);
-            }
-
-            if (nextStepButton != null)
-            {
-                nextStepButton.onClick.RemoveAllListeners();
-                nextStepButton.onClick.AddListener(AutoPlaySteps);
-            }
-
-            if (autoPlayButton != null)
-            {
-                autoPlayButton.onClick.RemoveAllListeners();
-                autoPlayButton.onClick.AddListener(AutoPlaySteps);
-            }
-
-            if (stopAutoButton != null)
-            {
-                stopAutoButton.onClick.RemoveAllListeners();
-                stopAutoButton.onClick.AddListener(StopAutoPlay);
-            }
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(action);
         }
 
         public void Resume()
@@ -127,45 +88,27 @@ namespace DungeonCrawler.UI
                 ClearVisualization();
             }
 
-            if (GameUIManager.Instance != null)
-            {
-                GameUIManager.Instance.ResumeGame();
-            }
+            GameUIManager.Instance?.ResumeGame();
         }
 
         private void ReturnToVillage()
         {
             Debug.Log("Pause Return to Village clicked");
             ClearVisualization();
-            if (GameUIManager.Instance != null)
-            {
-                GameUIManager.Instance.ResumeGame();
-            }
-
-            if (FloorManager.Instance != null)
-            {
-                FloorManager.Instance.ReturnToVillage();
-            }
+            GameUIManager.Instance?.ResumeGame();
+            FloorManager.Instance?.ReturnToVillage();
         }
 
         private void SaveGame()
         {
             Debug.Log("Pause Save clicked");
-            if (SaveManager.Instance != null)
-            {
-                SaveManager.Instance.SaveGame();
-            }
+            SaveManager.Instance?.SaveGame();
         }
 
         private void LoadGame()
         {
             Debug.Log("Pause Load clicked");
-            if (SaveManager.Instance != null)
-            {
-                SaveManager.Instance.LoadGame();
-            }
-            
-            // Auto resume after load to prevent being stuck in pause menu with new data
+            SaveManager.Instance?.LoadGame();
             Resume();
         }
 
@@ -173,50 +116,36 @@ namespace DungeonCrawler.UI
         {
             bool isDungeon = IsDungeonPauseContext();
             SetVisualizationButtonsVisible(isDungeon);
-
-            if (villageButton != null)
-            {
-                villageButton.gameObject.SetActive(isDungeon);
-            }
+            SetButtonVisible(villageButton, isDungeon);
         }
 
         private void ShowAStarSearch()
         {
-            if (!IsDungeonPauseContext())
+            if (IsDungeonPauseContext())
             {
-                return;
+                PathfindingVisualizer.GetOrCreate().ShowAStarSearch();
             }
-
-            PathfindingVisualizer.GetOrCreate().ShowAStarSearch();
         }
 
         private void ShowBFSSearch()
         {
-            if (!IsDungeonPauseContext())
+            if (IsDungeonPauseContext())
             {
-                return;
+                PathfindingVisualizer.GetOrCreate().ShowBFSSearch();
             }
-
-            PathfindingVisualizer.GetOrCreate().ShowBFSSearch();
         }
 
         private void CompareSearches()
         {
-            if (!IsDungeonPauseContext())
+            if (IsDungeonPauseContext())
             {
-                return;
+                PathfindingVisualizer.GetOrCreate().CompareSearches();
             }
-
-            PathfindingVisualizer.GetOrCreate().CompareSearches();
         }
 
         private void ClearVisualization()
         {
-            PathfindingVisualizer visualizer = PathfindingVisualizer.Instance;
-            if (visualizer != null)
-            {
-                visualizer.ClearVisualization();
-            }
+            PathfindingVisualizer.Instance?.ClearVisualization();
         }
 
         private void AutoPlaySteps()
@@ -226,11 +155,7 @@ namespace DungeonCrawler.UI
 
         private void StopAutoPlay()
         {
-            PathfindingVisualizer visualizer = PathfindingVisualizer.Instance;
-            if (visualizer != null)
-            {
-                visualizer.StopAutoPlay();
-            }
+            PathfindingVisualizer.Instance?.StopAutoPlay();
         }
 
         private bool IsDungeonPauseContext()
@@ -263,143 +188,291 @@ namespace DungeonCrawler.UI
             }
         }
 
-        private void EnsureVisualizationButtons()
+        private void RebuildLayout()
         {
-            showAStarButton = EnsureButton(showAStarButton, "ShowAStarSearchButton", "Show A* Search");
-            showBFSButton = EnsureButton(showBFSButton, "ShowBFSSearchButton", "Show BFS Search");
-            compareButton = EnsureButton(compareButton, "CompareSearchButton", "Compare A* vs BFS");
-            clearVisualizationButton = EnsureButton(clearVisualizationButton, "ClearVisualizationButton", "Clear Visualization");
-            nextStepButton = EnsureButton(nextStepButton, "NextStepButton", "Next Step");
-            autoPlayButton = EnsureButton(autoPlayButton, "AutoPlayStepsButton", "Auto Play Steps");
-            stopAutoButton = EnsureButton(stopAutoButton, "StopAutoButton", "Stop Auto");
+            SetupDimPanel();
+            cardRect = EnsureRect("PauseMenuCard", transform);
+            ConfigureCard(cardRect);
+
+            Text title = EnsureText("Title", cardRect, "PAUSED", 32);
+            ConfigureLayoutElement(title.gameObject, 280f, 48f);
+
+            gameplayButtonsRoot = EnsureGroup("GameplayButtons", cardRect);
+            visualizationButtonsRoot = EnsureGroup("VisualizationButtons", cardRect);
+
+            Text subtitle = EnsureText("VisualizationTitle", cardRect, "Pathfinding Visualization", 22);
+            ConfigureLayoutElement(subtitle.gameObject, 340f, 34f);
+
+            MoveChildAfter(title.transform, cardRect, 0);
+            MoveChildAfter(gameplayButtonsRoot, cardRect, 1);
+            MoveChildAfter(subtitle.transform, cardRect, 2);
+            MoveChildAfter(visualizationButtonsRoot, cardRect, 3);
+
+            resumeButton = EnsureButton(resumeButton, "ResumeButton", "Resume", gameplayButtonsRoot, new Color(0.20f, 0.42f, 0.22f, 1f));
+            villageButton = EnsureButton(villageButton, "VillageButton", "Return to Village", gameplayButtonsRoot, new Color(0.42f, 0.30f, 0.18f, 1f));
+            saveButton = EnsureButton(saveButton, "SaveButton", "Save", gameplayButtonsRoot, new Color(0.22f, 0.24f, 0.48f, 1f));
+            loadButton = EnsureButton(loadButton, "LoadButton", "Load", gameplayButtonsRoot, new Color(0.34f, 0.22f, 0.48f, 1f));
+
+            showAStarButton = EnsureButton(showAStarButton, "ShowAStarSearchButton", "Show A* Search", visualizationButtonsRoot, new Color(0.18f, 0.42f, 0.20f, 1f));
+            showBFSButton = EnsureButton(showBFSButton, "ShowBFSSearchButton", "Show BFS Search", visualizationButtonsRoot, new Color(0.18f, 0.30f, 0.55f, 1f));
+            compareButton = EnsureButton(compareButton, "CompareSearchButton", "Compare A* vs BFS", visualizationButtonsRoot, new Color(0.24f, 0.35f, 0.46f, 1f));
+            clearVisualizationButton = EnsureButton(clearVisualizationButton, "ClearVisualizationButton", "Clear Visualization", visualizationButtonsRoot, new Color(0.36f, 0.28f, 0.20f, 1f));
+            nextStepButton = EnsureButton(nextStepButton, "NextStepButton", "Next Step", visualizationButtonsRoot, new Color(0.30f, 0.35f, 0.22f, 1f));
+            autoPlayButton = EnsureButton(autoPlayButton, "AutoPlayStepsButton", "Auto Play Steps", visualizationButtonsRoot, new Color(0.20f, 0.38f, 0.24f, 1f));
+            stopAutoButton = EnsureButton(stopAutoButton, "StopAutoButton", "Stop Auto", visualizationButtonsRoot, new Color(0.40f, 0.22f, 0.22f, 1f));
+
+            DisableOldEmptyButtonsContainer();
+            Debug.Log("Pause menu layout rebuilt");
+            Debug.Log("Pause visualization buttons aligned");
         }
 
-        private void ArrangeButtons()
+        private void SetupDimPanel()
         {
-            RectTransform panelRect = transform as RectTransform;
-            if (panelRect != null)
+            RectTransform rectTransform = transform as RectTransform;
+            if (rectTransform != null)
             {
-                panelRect.sizeDelta = new Vector2(Mathf.Max(panelRect.sizeDelta.x, 620f), Mathf.Max(panelRect.sizeDelta.y, 620f));
+                rectTransform.anchorMin = Vector2.zero;
+                rectTransform.anchorMax = Vector2.one;
+                rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
             }
 
-            float y = -72f;
-            float spacing = 40f;
-            PositionButton(resumeButton, y);
-            y -= spacing;
-            PositionButton(showAStarButton, y);
-            y -= spacing;
-            PositionButton(showBFSButton, y);
-            y -= spacing;
-            PositionButton(compareButton, y);
-            y -= spacing;
-            PositionButton(clearVisualizationButton, y);
-            y -= spacing;
-            PositionButton(nextStepButton, y);
-            y -= spacing;
-            PositionButton(autoPlayButton, y);
-            y -= spacing;
-            PositionButton(stopAutoButton, y);
-            y -= spacing;
-            PositionButton(villageButton, y);
-            y -= spacing;
-            PositionButton(saveButton, y);
-            y -= spacing;
-            PositionButton(loadButton, y);
+            Image image = GetComponent<Image>();
+            if (image == null)
+            {
+                image = gameObject.AddComponent<Image>();
+            }
+
+            image.color = new Color(0f, 0f, 0f, 0.42f);
+            image.raycastTarget = true;
         }
 
-        private void PositionButton(Button button, float y)
+        private void ConfigureCard(RectTransform rectTransform)
         {
-            if (button == null)
-            {
-                return;
-            }
-
-            RectTransform rectTransform = button.GetComponent<RectTransform>();
-            if (rectTransform == null)
-            {
-                return;
-            }
-
-            rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            rectTransform.anchoredPosition = new Vector2(0f, y);
-            rectTransform.sizeDelta = new Vector2(230f, 34f);
-            button.transform.SetAsLastSibling();
+            rectTransform.anchoredPosition = Vector2.zero;
+            rectTransform.sizeDelta = new Vector2(420f, 620f);
+
+            Image image = rectTransform.GetComponent<Image>();
+            if (image == null)
+            {
+                image = rectTransform.gameObject.AddComponent<Image>();
+            }
+
+            image.color = new Color(0.035f, 0.038f, 0.045f, 0.88f);
+            image.raycastTarget = true;
+
+            VerticalLayoutGroup layout = rectTransform.GetComponent<VerticalLayoutGroup>();
+            if (layout == null)
+            {
+                layout = rectTransform.gameObject.AddComponent<VerticalLayoutGroup>();
+            }
+
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.padding = new RectOffset(0, 0, 24, 24);
+            layout.spacing = 10f;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
         }
 
-        private Button EnsureButton(Button existingButton, string objectName, string label)
+        private RectTransform EnsureGroup(string name, Transform parent)
         {
-            if (existingButton != null)
+            RectTransform group = EnsureRect(name, parent);
+            group.sizeDelta = name == "GameplayButtons" ? new Vector2(320f, 159f) : new Vector2(320f, 282f);
+            ConfigureLayoutElement(group.gameObject, 320f, group.sizeDelta.y);
+
+            Image image = group.GetComponent<Image>();
+            if (image != null)
             {
-                SetButtonLabel(existingButton, label);
-                return existingButton;
+                image.enabled = false;
             }
 
-            Transform existingTransform = transform.Find(objectName);
-            if (existingTransform != null && existingTransform.TryGetComponent(out Button foundButton))
+            VerticalLayoutGroup layout = group.GetComponent<VerticalLayoutGroup>();
+            if (layout == null)
             {
-                SetButtonLabel(foundButton, label);
-                return foundButton;
+                layout = group.gameObject.AddComponent<VerticalLayoutGroup>();
             }
 
-            Button template = resumeButton != null ? resumeButton : villageButton;
-            GameObject buttonObject;
-            if (template != null)
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.spacing = 5f;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            return group;
+        }
+
+        private RectTransform EnsureRect(string name, Transform parent)
+        {
+            Transform child = FindChildRecursive(transform, name);
+            GameObject childObject;
+            if (child != null)
             {
-                buttonObject = Instantiate(template.gameObject, transform);
-                buttonObject.name = objectName;
-                buttonObject.transform.SetAsLastSibling();
+                childObject = child.gameObject;
             }
             else
             {
-                buttonObject = CreatePlainButton(objectName);
+                childObject = new GameObject(name, typeof(RectTransform));
             }
 
-            Button button = buttonObject.GetComponent<Button>();
-            SetButtonLabel(button, label);
-            return button;
+            childObject.transform.SetParent(parent, false);
+            RectTransform rectTransform = childObject.GetComponent<RectTransform>();
+            if (rectTransform == null)
+            {
+                rectTransform = childObject.AddComponent<RectTransform>();
+            }
+
+            childObject.SetActive(true);
+            return rectTransform;
         }
 
-        private GameObject CreatePlainButton(string objectName)
+        private Text EnsureText(string name, Transform parent, string label, int fontSize)
         {
-            GameObject buttonObject = new GameObject(objectName, typeof(RectTransform), typeof(Image), typeof(Button));
-            buttonObject.transform.SetParent(transform, false);
-            RectTransform rectTransform = buttonObject.GetComponent<RectTransform>();
-            rectTransform.sizeDelta = new Vector2(220f, 36f);
+            RectTransform rectTransform = EnsureRect(name, parent);
+            Text text = rectTransform.GetComponent<Text>();
+            if (text == null)
+            {
+                text = rectTransform.gameObject.AddComponent<Text>();
+            }
 
-            Image image = buttonObject.GetComponent<Image>();
-            image.color = new Color(0.12f, 0.12f, 0.12f, 0.85f);
+            text.text = label;
+            text.fontSize = fontSize;
+            text.fontStyle = FontStyle.Bold;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.font = GetFont();
 
-            GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(Text));
-            textObject.transform.SetParent(buttonObject.transform, false);
-            RectTransform textRect = textObject.GetComponent<RectTransform>();
+            rectTransform.sizeDelta = new Vector2(360f, fontSize + 18f);
+            return text;
+        }
+
+        private Button EnsureButton(Button existingButton, string objectName, string label, Transform parent, Color color)
+        {
+            Button button = existingButton != null ? existingButton : FindButton(objectName);
+            if (button == null)
+            {
+                GameObject buttonObject = new GameObject(objectName, typeof(RectTransform), typeof(Image), typeof(Button));
+                button = buttonObject.GetComponent<Button>();
+            }
+
+            button.gameObject.name = objectName;
+            button.transform.SetParent(parent, false);
+            button.gameObject.SetActive(true);
+
+            RectTransform rectTransform = button.GetComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            rectTransform.sizeDelta = new Vector2(280f, 36f);
+            ConfigureLayoutElement(button.gameObject, 280f, 36f);
+
+            Image image = button.GetComponent<Image>();
+            if (image == null)
+            {
+                image = button.gameObject.AddComponent<Image>();
+            }
+
+            image.color = color;
+            image.raycastTarget = true;
+
+            Text text = button.GetComponentInChildren<Text>(true);
+            if (text == null)
+            {
+                GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(Text));
+                textObject.transform.SetParent(button.transform, false);
+                text = textObject.GetComponent<Text>();
+            }
+
+            RectTransform textRect = text.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
 
-            Text text = textObject.GetComponent<Text>();
+            text.text = label;
+            text.fontSize = 15;
+            text.fontStyle = FontStyle.Bold;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
-            text.fontSize = 16;
-            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-
-            return buttonObject;
+            text.font = GetFont();
+            return button;
         }
 
-        private void SetButtonLabel(Button button, string label)
+        private Button FindButton(string name)
         {
-            if (button == null)
+            Transform child = FindChildRecursive(transform, name);
+            return child != null ? child.GetComponent<Button>() : null;
+        }
+
+        private Transform FindChildRecursive(Transform root, string childName)
+        {
+            foreach (Transform child in root)
             {
-                return;
+                if (child.name == childName)
+                {
+                    return child;
+                }
+
+                Transform nested = FindChildRecursive(child, childName);
+                if (nested != null)
+                {
+                    return nested;
+                }
             }
 
-            Text text = button.GetComponentInChildren<Text>(true);
-            if (text != null)
+            return null;
+        }
+
+        private void ConfigureLayoutElement(GameObject target, float width, float height)
+        {
+            LayoutElement layoutElement = target.GetComponent<LayoutElement>();
+            if (layoutElement == null)
             {
-                text.text = label;
+                layoutElement = target.AddComponent<LayoutElement>();
             }
+
+            layoutElement.preferredWidth = width;
+            layoutElement.preferredHeight = height;
+            layoutElement.minWidth = width;
+            layoutElement.minHeight = height;
+            layoutElement.flexibleWidth = 0f;
+            layoutElement.flexibleHeight = 0f;
+        }
+
+        private void MoveChildAfter(Transform child, Transform parent, int siblingIndex)
+        {
+            child.SetParent(parent, false);
+            child.SetSiblingIndex(siblingIndex);
+        }
+
+        private void DisableOldEmptyButtonsContainer()
+        {
+            Transform oldButtons = transform.Find("Buttons");
+            if (oldButtons != null && oldButtons != gameplayButtonsRoot && oldButtons.childCount == 0)
+            {
+                oldButtons.gameObject.SetActive(false);
+            }
+        }
+
+        private Font GetFont()
+        {
+            if (cachedFont != null)
+            {
+                return cachedFont;
+            }
+
+            cachedFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (cachedFont == null)
+            {
+                cachedFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            }
+
+            return cachedFont;
         }
     }
 }

@@ -6,7 +6,7 @@ using DungeonCrawler.Dungeon;
 
 namespace DungeonCrawler.UI
 {
-    public enum UIState { MainMenu, Dungeon, Paused, Shop, FloorSelect }
+    public enum UIState { MainMenu, Dungeon, Paused, PathfindingVisualization, Shop, FloorSelect }
 
     public class GameUIManager : MonoBehaviour
     {
@@ -24,7 +24,7 @@ namespace DungeonCrawler.UI
         [SerializeField] private UIState currentState = UIState.MainMenu;
 
         public UIState CurrentState => currentState;
-        public bool IsDungeonContext => currentState == UIState.Dungeon || currentState == UIState.Paused;
+        public bool IsDungeonContext => currentState == UIState.Dungeon || currentState == UIState.Paused || currentState == UIState.PathfindingVisualization;
 
         [Header("Panels")]
         public GameObject statusPanel;
@@ -191,7 +191,12 @@ if (statusPanel != null) statusPanel.SetActive(false);
             // Esc for Pause
             if (Keyboard.current.escapeKey.wasPressedThisFrame)
             {
-                if (currentState == UIState.Dungeon || currentState == UIState.Paused)
+                if (currentState == UIState.PathfindingVisualization)
+                {
+                    PauseMenuUI pauseMenu = pausePanel != null ? pausePanel.GetComponent<PauseMenuUI>() : FindAnyObjectByType<PauseMenuUI>(FindObjectsInactive.Include);
+                    pauseMenu?.ReturnFromVisualizationMode();
+                }
+                else if (currentState == UIState.Dungeon || currentState == UIState.Paused)
                 {
                     TogglePause();
                 }
@@ -357,7 +362,7 @@ if (statusPanel != null) statusPanel.SetActive(false);
                 else if (canvas.name == "AlgorithmLabel")
                 {
                     // Show algorithm labels only during dungeon or pause
-                    canvas.gameObject.SetActive(currentState == UIState.Dungeon || currentState == UIState.Paused);
+                    canvas.gameObject.SetActive(currentState == UIState.Dungeon || currentState == UIState.Paused || currentState == UIState.PathfindingVisualization);
                 }
             }
 
@@ -490,6 +495,35 @@ if (statusPanel != null) statusPanel.SetActive(false);
         public void ResumeGame()
         {
             if (currentState == UIState.Paused) TogglePause();
+        }
+
+        public void EnterPathfindingVisualization()
+        {
+            if (currentState != UIState.Paused)
+            {
+                return;
+            }
+
+            currentState = UIState.PathfindingVisualization;
+            Time.timeScale = 0f;
+            if (pausePanel != null) pausePanel.SetActive(false);
+            if (pauseButton != null) pauseButton.gameObject.SetActive(false);
+            if (benchmarkPanel != null) benchmarkPanel.SetActive(false);
+            HideGameplayHUD();
+        }
+
+        public void ReturnToPauseFromVisualization()
+        {
+            if (currentState != UIState.PathfindingVisualization)
+            {
+                return;
+            }
+
+            currentState = UIState.Paused;
+            Time.timeScale = 0f;
+            if (pausePanel != null) pausePanel.SetActive(true);
+            if (pauseButton != null) pauseButton.gameObject.SetActive(false);
+            HideGameplayHUD();
         }
     }
 }

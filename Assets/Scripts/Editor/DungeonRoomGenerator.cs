@@ -2167,6 +2167,17 @@ menuObject.SetActive(false); // Hide by default in editor generation; GameUIMana
             UnityEngine.UI.Button villageBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "VillageButton", Vector2.zero, btnSize, "Return to Village", new Color(0.4f, 0.3f, 0.2f));
             UnityEngine.UI.Button saveBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "SaveButton", Vector2.zero, btnSize, "Save", new Color(0.2f, 0.2f, 0.4f));
             UnityEngine.UI.Button loadBtn = CreateOrUpdatePanelButton(gameplayObj.transform, "LoadButton", Vector2.zero, btnSize, "Load", new Color(0.3f, 0.2f, 0.4f));
+            UnityEngine.UI.Button visualizationReturnBtn = CreateOrUpdatePanelButton(canvas.transform, "VisualizationReturnButton", Vector2.zero, new Vector2(120f, 42f), "Return", new Color(0.12f, 0.12f, 0.14f, 0.92f));
+            RectTransform visualizationReturnRect = visualizationReturnBtn.GetComponent<RectTransform>();
+            if (visualizationReturnRect != null)
+            {
+                visualizationReturnRect.anchorMin = new Vector2(1f, 1f);
+                visualizationReturnRect.anchorMax = new Vector2(1f, 1f);
+                visualizationReturnRect.pivot = new Vector2(1f, 1f);
+                visualizationReturnRect.anchoredPosition = new Vector2(-18f, -18f);
+                visualizationReturnRect.sizeDelta = new Vector2(120f, 42f);
+            }
+            visualizationReturnBtn.gameObject.SetActive(false);
 
             // Component setup
             PauseMenuUI pauseMenu = pausePanelObj.GetComponent<PauseMenuUI>();

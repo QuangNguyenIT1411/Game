@@ -1,4 +1,5 @@
 using DungeonCrawler.AI;
+using DungeonCrawler.CameraControls;
 using DungeonCrawler.Dungeon;
 using DungeonCrawler.Save;
 using UnityEngine;
@@ -20,6 +21,7 @@ namespace DungeonCrawler.UI
         [SerializeField] private Button nextStepButton;
         [SerializeField] private Button autoPlayButton;
         [SerializeField] private Button stopAutoButton;
+        [SerializeField] private Button visualizationReturnButton;
 
         [Header("Visualization")]
         [SerializeField] private bool clearOnResume = true;
@@ -68,6 +70,7 @@ namespace DungeonCrawler.UI
             SetupButton(nextStepButton, AutoPlaySteps);
             SetupButton(autoPlayButton, AutoPlaySteps);
             SetupButton(stopAutoButton, StopAutoPlay);
+            SetupButton(visualizationReturnButton, ReturnFromVisualizationMode);
         }
 
         private void SetupButton(Button button, UnityEngine.Events.UnityAction action)
@@ -88,6 +91,8 @@ namespace DungeonCrawler.UI
                 ClearVisualization();
             }
 
+            visualizationReturnButton?.gameObject.SetActive(false);
+            VisualizationCameraController.Instance?.ExitVisualizationMode(true);
             GameUIManager.Instance?.ResumeGame();
         }
 
@@ -95,6 +100,8 @@ namespace DungeonCrawler.UI
         {
             Debug.Log("Pause Return to Village clicked");
             ClearVisualization();
+            visualizationReturnButton?.gameObject.SetActive(false);
+            VisualizationCameraController.Instance?.ExitVisualizationMode(true);
             GameUIManager.Instance?.ResumeGame();
             FloorManager.Instance?.ReturnToVillage();
         }
@@ -124,6 +131,7 @@ namespace DungeonCrawler.UI
             if (IsDungeonPauseContext())
             {
                 PathfindingVisualizer.GetOrCreate().ShowAStarSearch();
+                EnterVisualizationMode("Entered A* Visualization Mode");
             }
         }
 
@@ -132,6 +140,7 @@ namespace DungeonCrawler.UI
             if (IsDungeonPauseContext())
             {
                 PathfindingVisualizer.GetOrCreate().ShowBFSSearch();
+                EnterVisualizationMode("Entered BFS Visualization Mode");
             }
         }
 
@@ -140,7 +149,17 @@ namespace DungeonCrawler.UI
             if (IsDungeonPauseContext())
             {
                 PathfindingVisualizer.GetOrCreate().CompareSearches();
+                EnterVisualizationMode("Entered Compare Visualization Mode");
             }
+        }
+
+        public void ReturnFromVisualizationMode()
+        {
+            VisualizationCameraController.Instance?.ExitVisualizationMode(true);
+            visualizationReturnButton?.gameObject.SetActive(false);
+            GameUIManager.Instance?.ReturnToPauseFromVisualization();
+            Time.timeScale = 0f;
+            Debug.Log("Returned to Pause Menu from Visualization");
         }
 
         private void ClearVisualization()
@@ -191,6 +210,8 @@ namespace DungeonCrawler.UI
         private void RebuildLayout()
         {
             SetupDimPanel();
+            visualizationReturnButton = EnsureReturnButton();
+            visualizationReturnButton.gameObject.SetActive(false);
             cardRect = EnsureRect("PauseMenuCard", transform);
             ConfigureCard(cardRect);
 
@@ -224,6 +245,18 @@ namespace DungeonCrawler.UI
             DisableOldEmptyButtonsContainer();
             Debug.Log("Pause menu layout rebuilt");
             Debug.Log("Pause visualization buttons aligned");
+        }
+
+        private void EnterVisualizationMode(string logMessage)
+        {
+            GameUIManager.Instance?.EnterPathfindingVisualization();
+            VisualizationCameraController.GetOrCreate()?.EnterVisualizationMode();
+            visualizationReturnButton = EnsureReturnButton();
+            SetupButton(visualizationReturnButton, ReturnFromVisualizationMode);
+            visualizationReturnButton.gameObject.SetActive(true);
+            visualizationReturnButton.transform.SetAsLastSibling();
+            Time.timeScale = 0f;
+            Debug.Log(logMessage);
         }
 
         private void SetupDimPanel()
@@ -396,6 +429,56 @@ namespace DungeonCrawler.UI
 
             text.text = label;
             text.fontSize = 15;
+            text.fontStyle = FontStyle.Bold;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.font = GetFont();
+            return button;
+        }
+
+        private Button EnsureReturnButton()
+        {
+            Transform parent = transform.parent != null ? transform.parent : transform;
+            Transform existing = parent.Find("VisualizationReturnButton");
+            GameObject buttonObject;
+            if (existing != null)
+            {
+                buttonObject = existing.gameObject;
+            }
+            else
+            {
+                buttonObject = new GameObject("VisualizationReturnButton", typeof(RectTransform), typeof(Image), typeof(Button));
+                buttonObject.transform.SetParent(parent, false);
+            }
+
+            RectTransform rectTransform = buttonObject.GetComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(1f, 1f);
+            rectTransform.anchorMax = new Vector2(1f, 1f);
+            rectTransform.pivot = new Vector2(1f, 1f);
+            rectTransform.anchoredPosition = new Vector2(-18f, -18f);
+            rectTransform.sizeDelta = new Vector2(120f, 42f);
+
+            Image image = buttonObject.GetComponent<Image>();
+            image.color = new Color(0.12f, 0.12f, 0.14f, 0.92f);
+            image.raycastTarget = true;
+
+            Button button = buttonObject.GetComponent<Button>();
+            Text text = button.GetComponentInChildren<Text>(true);
+            if (text == null)
+            {
+                GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(Text));
+                textObject.transform.SetParent(buttonObject.transform, false);
+                text = textObject.GetComponent<Text>();
+            }
+
+            RectTransform textRect = text.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            text.text = "Return";
+            text.fontSize = 16;
             text.fontStyle = FontStyle.Bold;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;

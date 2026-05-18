@@ -2,6 +2,7 @@ using DungeonCrawler.Combat;
 using DungeonCrawler.Items;
 using DungeonCrawler.Progression;
 using DungeonCrawler.Stats;
+using DungeonCrawler.CameraControls;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -579,6 +580,11 @@ namespace DungeonCrawler.Player
 
         private void FollowPlayerWithCamera()
         {
+            if (VisualizationCameraController.IsVisualizationCameraActive)
+            {
+                return;
+            }
+
             if (followCamera == null)
             {
                 return;
